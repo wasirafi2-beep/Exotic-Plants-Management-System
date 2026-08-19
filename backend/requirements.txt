@@ -1,0 +1,14 @@
+httpx
+black
+ruff
+python-jose
+fastapi[standard]
+uvicorn[standard]
+mysql-connector-python
+python-jose[cryptography]
+bcrypt==4.3.0
+passlib==1.7.4
+python-multipart
+pydantic
+pydantic_core
+python-dotenv
