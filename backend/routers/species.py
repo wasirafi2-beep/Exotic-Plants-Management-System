@@ -14,9 +14,8 @@ router = APIRouter(
 @router.get("")
 def list_species(
     conn=Depends(get_db),
-    user=Depends(get_current_user_optional)
+    user=Depends(get_current_user)
 ):
-    user_id = user["user_id"] if user else None
     return run_query(
         conn,
         """
@@ -25,10 +24,12 @@ def list_species(
             COUNT(p.plant_id) AS plant_count,
             (sp.user_id = %s) AS is_user_owned
         FROM species sp
-        LEFT JOIN plants p ON p.species_id = sp.species_id
+        LEFT JOIN plants p
+            ON p.species_id = sp.species_id
+            AND p.owner_id = %s
         GROUP BY sp.species_id
         """,
-        (user_id,),
+        (user["user_id"], user["user_id"]),
         fetch_all=True
     )
 

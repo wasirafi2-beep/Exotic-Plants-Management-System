@@ -86,7 +86,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/logout`,
+        `http://localhost:8000/api/auth/logout`,
         {
           method: "POST",
           credentials: "include",
@@ -99,10 +99,8 @@ export default function Sidebar() {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Clear user from Zustand
       clearUser();
 
-      // Redirect to login page
       router.push("/login");
       router.refresh();
     }
