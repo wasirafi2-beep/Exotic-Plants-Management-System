@@ -1,22 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
 from backend.database import get_db, run_query
 from backend.schemas import SpeciesIn
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, get_current_user_optional
 from backend.id_generator import generate_id
 
 
 router = APIRouter(
     prefix="/species",
     tags=["species"],
-    dependencies=[Depends(get_current_user)]
 )
 
 
 @router.get("")
 def list_species(
     conn=Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_user_optional)
 ):
+    user_id = user["user_id"] if user else None
     return run_query(
         conn,
         """
@@ -25,11 +25,10 @@ def list_species(
             COUNT(p.plant_id) AS plant_count,
             (sp.user_id = %s) AS is_user_owned
         FROM species sp
-        LEFT JOIN plants p
-            ON p.species_id = sp.species_id
+        LEFT JOIN plants p ON p.species_id = sp.species_id
         GROUP BY sp.species_id
         """,
-        (user["user_id"],),
+        (user_id,),
         fetch_all=True
     )
 
@@ -82,8 +81,6 @@ def update_species(
     conn=Depends(get_db),
     user=Depends(get_current_user)
 ):
-    # First verify that this species belongs to the
-    # currently authenticated user.
     owned = run_query(
         conn,
         """
@@ -105,7 +102,6 @@ def update_species(
             detail="Species not found or not owned by you"
         )
 
-    # Now update it.
     run_query(
         conn,
         """
@@ -138,7 +134,6 @@ def delete_species(
     conn=Depends(get_db),
     user=Depends(get_current_user)
 ):
-    # Verify ownership before deleting.
     owned = run_query(
         conn,
         """

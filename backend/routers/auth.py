@@ -60,3 +60,14 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), 
 @router.get("/me")
 def me(user=Depends(get_current_user)):
     return user
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+    return {"detail": "Logged out successfully"}

@@ -1,4 +1,5 @@
-from fastapi import Cookie, Depends, HTTPException, status
+from typing import Optional
+from fastapi import Cookie, Depends, HTTPException, status, Request
 from jose import JWTError
 from backend.security import decode_token
 from backend.database import get_db, run_query
@@ -42,3 +43,14 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+
+async def get_current_user_optional(request: Request, conn=Depends(get_db)) -> Optional[dict]:
+    token = request.cookies.get("access_token")
+    if not token:
+        return None
+    try:
+        return await get_current_user(token=token, conn=conn)
+    except HTTPException:
+        return None

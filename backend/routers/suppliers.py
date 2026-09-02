@@ -1,22 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
 from backend.database import get_db, run_query
 from backend.schemas import SupplierIn
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, get_current_user_optional
 from backend.id_generator import generate_id
 
 
 router = APIRouter(
     prefix="/suppliers",
-    tags=["suppliers"],
-    dependencies=[Depends(get_current_user)]
+    tags=["suppliers"]
 )
 
 
 @router.get("")
 def list_suppliers(
     conn=Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(get_current_user_optional)
 ):
+    user_id = user["user_id"] if user else None
     return run_query(
         conn,
         """
@@ -25,13 +25,13 @@ def list_suppliers(
             COUNT(p.plant_id) AS plants_supplied,
             (su.user_id = %s) AS is_user_owned
         FROM suppliers su
-        LEFT JOIN plants p
-            ON p.supplier_id = su.supplier_id
+        LEFT JOIN plants p ON p.supplier_id = su.supplier_id
         GROUP BY su.supplier_id
         """,
-        (user["user_id"],),
+        (user_id,),
         fetch_all=True
     )
+
 
 
 @router.post("", status_code=201)
