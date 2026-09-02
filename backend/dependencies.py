@@ -46,11 +46,19 @@ def get_current_user(
 
 
 
-async def get_current_user_optional(request: Request, conn=Depends(get_db)) -> Optional[dict]:
+async def get_current_user_optional(
+    request: Request,
+    conn=Depends(get_db),
+) -> Optional[dict]:
     token = request.cookies.get("access_token")
+
     if not token:
         return None
+
     try:
-        return await get_current_user(token=token, conn=conn)
+        return get_current_user(
+            access_token=token,
+            conn=conn,
+        )
     except HTTPException:
         return None
